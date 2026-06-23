@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detector AI</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="logo"> Fake News Detector</div>
+
+        <div class="nav-links">
+            <a href="/home">Dashboard</a>
+            <a href="/history">History</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container">
+
+        <!-- DASHBOARD STATS -->
+        <div class="card-grid">
+
+            <div class="card">
+                <h3>Total Checks</h3>
+                <h2>{{ total_checks|default(0) }}</h2>
+            </div>
+
+            <div class="card">
+                <h3>Real News</h3>
+                <h2 style="color:#22c55e;">
+                    {{ real_count|default(0) }}
+                </h2>
+            </div>
+
+            <div class="card">
+                <h3>Fake News</h3>
+                <h2 style="color:#ef4444;">
+                    {{ fake_count|default(0) }}
+                </h2>
+            </div>
+
+            <div class="card">
+                <h3>Uncertain</h3>
+                <h2 style="color:#f59e0b;">
+                    {{ uncertain_count|default(0) }}
+                </h2>
+            </div>
+
+        </div>
+
+        <!-- NEWS INPUT -->
+        <div class="input-box">
+
+            <h2>Check News Authenticity</h2>
+
+            <form method="POST" enctype="multipart/form-data">
+
+                <textarea
+                    name="news"
+                    rows="7"
+                    placeholder="Paste news headline or article here..."
+                >{{ user_input|default('') }}</textarea>
+
+                <!-- IMAGE UPLOAD -->
+                <div class="upload-box">
+
+                    <label for="image">
+                         Upload News Screenshot (Optional)
+                    </label>
+
+                    <input
+                        type="file"
+                        id="image"
+                        name="image"
+                        accept="image/*">
+
+                </div>
+<br>
+                <button type="submit">
+                     Analyze News
+                </button>
+
+            </form>
+
+        </div>
+
+        <!-- RESULT SECTION -->
+        {% if result %}
+
+        <div class="result-card">
+
+            <h2>AI Verification Result</h2>
+
+            {% if "REAL" in result %}
+                <span class="badge real">
+                    {{ result }}
+                </span>
+
+            {% elif "FAKE" in result %}
+                <span class="badge fake">
+                    {{ result }}
+                </span>
+
+            {% else %}
+                <span class="badge uncertain">
+                    {{ result }}
+                </span>
+            {% endif %}
+
+            <!-- CONFIDENCE BAR -->
+
+            <div class="score-bar">
+
+                <div
+                    class="score-fill"
+                    style="width:50%">
+                </div>
+
+            </div>
+
+            <p class="confidence-text">
+                Confidence:
+                <strong>{{ confidence|default(0) }}%</strong>
+            </p>
+
+            <!-- METRICS -->
+
+            <div class="metrics">
+
+                <div class="metric">
+                    <h4>ML Confidence</h4>
+                    <p>{{ confidence|default(0) }}%</p>
+                </div>
+
+                <div class="metric">
+                    <h4>Semantic Match</h4>
+                    <p>{{ similarity|default(0) }}%</p>
+                </div>
+
+                <div class="metric">
+                    <h4>Source Credibility</h4>
+                    <p>{{ credibility|default(0) }}%</p>
+                </div>
+
+                <div class="metric">
+                    <h4>Evidence Score</h4>
+                    <p>{{ web_score|default(0) }}%</p>
+                </div>
+
+            </div>
+
+            <!-- ANALYSIS SUMMARY -->
+
+            <div class="reason-box">
+
+                <h3>Analysis Summary</h3>
+
+                <ul>
+
+                    <li>
+                        Machine Learning Confidence:
+                        <strong>{{ confidence|default(0) }}%</strong>
+                    </li>
+
+                    <li>
+                        Semantic Similarity:
+                        <strong>{{ similarity|default(0) }}%</strong>
+                    </li>
+
+                    <li>
+                        Trusted Source Credibility:
+                        <strong>{{ credibility|default(0) }}%</strong>
+                    </li>
+
+                    <li>
+                        Overall Evidence Score:
+                        <strong>{{ web_score|default(0) }}%</strong>
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+        <!-- OCR EXTRACTED TEXT -->
+
+        {% if extracted_text %}
+
+        <div class="result-card">
+
+            <h2>📄 Extracted Text From Uploaded Image</h2>
+
+            <p>
+                {{ extracted_text }}
+            </p>
+
+        </div>
+
+        {% endif %}
+
+        <!-- VERIFIED SOURCES -->
+
+        {% if sources %}
+
+        <div class="table-box">
+
+            <h2>Verified Sources</h2>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Source Information</th>
+                        <th>Visit</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for s in sources %}
+
+                    <tr>
+
+                        <td>
+
+                            <strong>
+                                {{ s.title }}
+                            </strong>
+
+                            <br><br>
+
+                            <small>
+                                {{ s.snippet }}
+                            </small>
+
+                        </td>
+
+                        <td>
+
+                            <a
+                                href="{{ s.link }}"
+                                target="_blank"
+                                class="source-btn">
+
+                                View Source
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</body>
+</html>

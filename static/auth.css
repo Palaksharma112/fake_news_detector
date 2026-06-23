@@ -1,0 +1,219 @@
+/* =========================
+   RESET
+========================= */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+/* =========================
+   BODY
+========================= */
+
+body{
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:
+    linear-gradient(
+        135deg,
+        #0f172a,
+        #1e293b,
+        #0ea5e9
+    );
+
+    padding:20px;
+}
+
+/* =========================
+   CONTAINER
+========================= */
+
+.auth-container{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+/* =========================
+   CARD
+========================= */
+
+.auth-card{
+    width:100%;
+    max-width:450px;
+
+    background:rgba(255,255,255,0.08);
+
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+
+    border:1px solid rgba(255,255,255,0.15);
+
+    border-radius:24px;
+
+    padding:40px;
+
+    box-shadow:
+    0 10px 40px rgba(0,0,0,0.35);
+
+    color:white;
+}
+
+/* =========================
+   LOGO
+========================= */
+
+.logo{
+    text-align:center;
+    font-size:32px;
+    font-weight:700;
+    margin-bottom:15px;
+}
+
+/* =========================
+   TITLES
+========================= */
+
+.auth-card h2{
+    text-align:center;
+    margin-bottom:10px;
+    font-size:28px;
+}
+
+.subtitle{
+    text-align:center;
+    color:#cbd5e1;
+    margin-bottom:30px;
+}
+
+/* =========================
+   INPUTS
+========================= */
+
+.input-group{
+    margin-bottom:20px;
+}
+
+.input-group label{
+    display:block;
+    margin-bottom:8px;
+    font-size:14px;
+    color:#cbd5e1;
+}
+
+.input-group input{
+    width:100%;
+    padding:14px;
+
+    border:none;
+    outline:none;
+
+    border-radius:12px;
+
+    background:#1e293b;
+    color:white;
+
+    font-size:15px;
+}
+
+.input-group input::placeholder{
+    color:#94a3b8;
+}
+
+.input-group input:focus{
+    border:1px solid #38bdf8;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+button{
+    width:100%;
+
+    padding:14px;
+
+    border:none;
+    border-radius:12px;
+
+    background:#0ea5e9;
+
+    color:white;
+
+    font-size:16px;
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:0.3s;
+}
+
+button:hover{
+    background:#0284c7;
+    transform:translateY(-2px);
+}
+
+/* =========================
+   LINKS
+========================= */
+
+.bottom-text{
+    margin-top:25px;
+    text-align:center;
+    color:#cbd5e1;
+}
+
+.bottom-text a{
+    color:#38bdf8;
+    text-decoration:none;
+    font-weight:600;
+}
+
+.bottom-text a:hover{
+    color:white;
+}
+
+/* =========================
+   ALERTS
+========================= */
+
+.alert{
+    background:#ef4444;
+    color:white;
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:20px;
+    text-align:center;
+}
+
+.success{
+    background:#22c55e;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:500px){
+
+    .auth-card{
+        padding:25px;
+    }
+
+    .logo{
+        font-size:28px;
+    }
+
+    .auth-card h2{
+        font-size:24px;
+    }
+
+}

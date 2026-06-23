@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Fake News AI</title>
+    <link rel="stylesheet" href="/static/auth.css">
+</head>
+<body>
+
+<div class="auth-container">
+
+    <div class="auth-card">
+
+        <div class="logo">
+             Fake News Detector
+        </div>
+
+        <h2>Welcome Back</h2>
+
+        <p class="subtitle">
+            Login to continue
+        </p>
+
+        <form method="POST">
+
+            <div class="input-group">
+                <label>Username</label>
+                <input
+                    type="text"
+                    name="username"
+                    required
+                >
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input
+                    type="password"
+                    name="password"
+                    required
+                >
+            </div>
+
+            <button type="submit">
+                Login
+            </button>
+
+        </form>
+
+        <p class="bottom-text">
+            Don't have an account?
+            <a href="/register">Register</a>
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+</html>

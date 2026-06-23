@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>History</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="navbar">
+    <h2>History</h2>
+    <div>
+        <a href="/home">Dashboard</a>
+        <a href="/logout">Logout</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <h2>Your Search History</h2>
+
+    <table>
+        <tr>
+            <th>News</th>
+            <th>Result</th>
+        </tr>
+
+        {% for news, result in data %}
+        <tr>
+            <td>{{ news }}</td>
+            <td>
+                {% if "REAL" in result %}
+                    <span class="badge-real">{{ result }}</span>
+                {% elif "FAKE" in result %}
+                    <span class="badge-fake">{{ result }}</span>
+                {% else %}
+                    <span class="badge-uncertain">{{ result }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+</body>
+</html>

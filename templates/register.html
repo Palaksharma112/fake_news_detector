@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register - Fake News AI</title>
+    <link rel="stylesheet" href="/static/auth.css">
+</head>
+<body>
+
+<div class="auth-container">
+
+    <div class="auth-card">
+
+        <div class="logo">
+             Fake News Detector
+        </div>
+
+        <h2>Create Account</h2>
+
+        <p class="subtitle">
+            Register to start verifying news
+        </p>
+
+        <form method="POST">
+
+            <div class="input-group">
+                <label>Username</label>
+                <input
+                    type="text"
+                    name="username"
+                    required
+                >
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input
+                    type="password"
+                    name="password"
+                    required
+                >
+            </div>
+
+            <button type="submit">
+                Register
+            </button>
+
+        </form>
+
+        <p class="bottom-text">
+            Already have an account?
+            <a href="/login">Login</a>
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+</html>
