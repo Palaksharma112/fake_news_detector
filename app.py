@@ -2,9 +2,9 @@ from flask import Flask, render_template, request, session, redirect
 import joblib
 import re
 import os
-
+import nltk
 from werkzeug.utils import secure_filename
-from nltk.corpus import stopwords
+
 
 from web_search import search_web
 from verifier import verify_sources
@@ -44,10 +44,10 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # STOPWORDS
 # ==========================================
 
-STOP_WORDS = set(
-    stopwords.words("english")
-)
+nltk.download("stopwords")
+from nltk.corpus import stopwords
 
+STOP_WORDS = set(stopwords.words("english"))
 # ==========================================
 # TEXT CLEANING
 # ==========================================
