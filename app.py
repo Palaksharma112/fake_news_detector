@@ -5,104 +5,76 @@ import os
 import nltk
 from werkzeug.utils import secure_filename
 
-
 from web_search import search_web
 from verifier import verify_sources
 from ocr_utils import extract_text_from_image
 import database as db
 
-# ==========================================
+# =========================
 # APP SETUP
-# ==========================================
-
+# =========================
 app = Flask(__name__)
 app.secret_key = "secret"
 
 db.init_db()
 
-# ==========================================
+# =========================
 # MODEL LOAD
-# ==========================================
-
+# =========================
 model = joblib.load("model.pkl")
 vectorizer = joblib.load("vectorizer.pkl")
 
-# ==========================================
-# OCR UPLOAD FOLDER
-# ==========================================
-
+# =========================
+# UPLOAD FOLDER
+# =========================
 UPLOAD_FOLDER = "uploads"
-
-os.makedirs(
-    UPLOAD_FOLDER,
-    exist_ok=True
-)
-
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# ==========================================
-# STOPWORDS
-# ==========================================
-
-
-
-nltk.download("stopwords", quiet=True)
+# =========================
+# NLTK SAFE SETUP
+# =========================
+try:
+    nltk.data.find("corpora/stopwords")
+except LookupError:
+    nltk.download("stopwords")
 
 from nltk.corpus import stopwords
-
 STOP_WORDS = set(stopwords.words("english"))
-# ==========================================
-# TEXT CLEANING
-# ==========================================
 
+# =========================
+# CLEAN TEXT
+# =========================
 def clean(text):
-
     text = text.lower()
+    text = re.sub(r"[^a-zA-Z ]", " ", text)
 
-    text = re.sub(
-        r"[^a-zA-Z ]",
-        " ",
-        text
-    )
-
-    words = []
-
-    for word in text.split():
-
-        if word not in STOP_WORDS:
-
-            words.append(word)
+    words = [
+        w for w in text.split()
+        if w not in STOP_WORDS
+    ]
 
     return " ".join(words)
 
-# ==========================================
-# ROOT
-# ==========================================
-
+# =========================
+# ROUTES
+# =========================
 @app.route("/")
 def index():
+    return redirect("/home" if "user" in session else "/login")
 
-    if "user" in session:
-        return redirect("/home")
 
-    return redirect("/login")
-
-# ==========================================
+# =========================
 # LOGIN
-# ==========================================
-
+# =========================
 @app.route("/login", methods=["GET", "POST"])
 def login():
-
     if request.method == "POST":
-
         username = request.form["username"]
         password = request.form["password"]
 
         if db.get_user(username, password):
-
             session["user"] = username
-
             return redirect("/home")
 
         return "Invalid Login"
@@ -110,32 +82,24 @@ def login():
     return render_template("login.html")
 
 
-
-# ==========================================
+# =========================
 # REGISTER
-# ==========================================
-
+# =========================
 @app.route("/register", methods=["GET", "POST"])
 def register():
-
     if request.method == "POST":
-
-        username = request.form["username"]
-        password = request.form["password"]
-
         db.add_user(
-            username,
-            password
+            request.form["username"],
+            request.form["password"]
         )
-
         return redirect("/login")
 
     return render_template("register.html")
 
-# ==========================================
-# HOME
-# ==========================================
 
+# =========================
+# HOME (MAIN LOGIC)
+# =========================
 @app.route("/home", methods=["GET", "POST"])
 def home():
 
@@ -147,255 +111,141 @@ def home():
     similarity = 0
     credibility = 0
     web_score = 0
+    sources = []
 
     user_input = ""
     extracted_text = ""
 
-    sources = []
-
     if request.method == "POST":
 
-        user_input = request.form.get(
-            "news",
-            ""
-        )
+        # =========================
+        # TEXT INPUT
+        # =========================
+        user_input = request.form.get("news", "")
 
-        # ==================================
-        # IMAGE OCR
-        # ==================================
-
+        # =========================
+        # IMAGE OCR INPUT
+        # =========================
         file = request.files.get("image")
 
         if file and file.filename != "":
+            filename = secure_filename(file.filename)
+            path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            file.save(path)
 
-            filename = secure_filename(
-                file.filename
-            )
-
-            filepath = os.path.join(
-                app.config["UPLOAD_FOLDER"],
-                filename
-            )
-
-            file.save(filepath)
-
-            extracted_text = extract_text_from_image(
-                filepath
-            )
+            extracted_text = extract_text_from_image(path)
 
             if extracted_text:
-
                 user_input += " " + extracted_text
 
-        # ==================================
-        # NO INPUT CHECK
-        # ==================================
-
         if not user_input.strip():
-
             return render_template(
                 "home.html",
-                result="Please enter news text or upload image."
+                result="Please enter news or upload image."
             )
 
-        # ==================================
+        # =========================
         # ML PREDICTION
-        # ==================================
-
+        # =========================
         cleaned = clean(user_input)
+        vec = vectorizer.transform([cleaned])
 
-        vec = vectorizer.transform(
-            [cleaned]
-        )
+        prediction = model.predict(vec)[0]
 
-        prediction = model.predict(
-            vec
-        )[0]
+        if hasattr(model, "predict_proba"):
+            proba = model.predict_proba(vec)[0]
+            confidence = round(float(max(proba) * 100), 2)
 
-        if hasattr(
-            model,
-            "predict_proba"
-        ):
+        # =========================
+        # WEB VERIFICATION
+        # =========================
+        results = search_web(user_input)
+        verification = verify_sources(results, user_input)
 
-            proba = model.predict_proba(
-                vec
-            )[0]
+        similarity = verification.get("similarity", 0)
+        credibility = verification.get("credibility", 0)
+        web_score = verification.get("final_score", 50)
+        sources = verification.get("sources", [])
 
-            confidence = round(
-                float(max(proba) * 100),
-                2
-            )
+        # =========================
+        # STABLE HYBRID SCORING
+        # =========================
 
-        # ==================================
-        # WEB SEARCH
-        # ==================================
+        ml_score = confidence if str(prediction).upper() == "REAL" else (100 - confidence)
 
-        results = search_web(
-            user_input
-        )
+        # clamp web score to avoid instability
+        web_score = max(30, min(web_score, 90))
 
-        # ==================================
-        # VERIFY
-        # ==================================
+        score = (ml_score * 0.65) + (web_score * 0.35)
 
-        verification = verify_sources(
-            results,
-            user_input
-        )
-
-        similarity = verification.get(
-            "similarity",
-            0
-        )
-
-        credibility = verification.get(
-            "credibility",
-            0
-        )
-
-        web_score = verification.get(
-            "final_score",
-            0
-        )
-
-        sources = verification.get(
-            "sources",
-            []
-        )
-
-        # ==================================
-        # HYBRID SCORING
-        # ==================================
-
-        score = 0
-
-        if str(prediction).upper() == "REAL":
-
-            score += confidence * 0.30
-
-        else:
-
-            score -= 10
-
-        score += web_score * 0.70
-
-        # ==================================
-        # FINAL RESULT
-        # ==================================
-
-        if score >= 80:
-
+        # =========================
+        # FINAL DECISION
+        # =========================
+        if score >= 75:
             result = "REAL NEWS ✅"
-
         elif score >= 60:
-
             result = "LIKELY REAL 🌐"
-
-        elif score >= 40:
-
+        elif score >= 45:
             result = "UNCERTAIN ⚠️"
-
         else:
-
             result = "LIKELY FAKE ❌"
 
-        # ==================================
+        # =========================
         # SAVE HISTORY
-        # ==================================
+        # =========================
+        db.add_history(session["user"], user_input, result)
 
-        db.add_history(
-            session["user"],
-            user_input,
-            result
-        )
-
-    # ======================================
+    # =========================
     # DASHBOARD STATS
-    # ======================================
+    # =========================
+    total_checks = real_count = fake_count = uncertain_count = 0
 
-    total_checks = 0
-    real_count = 0
-    fake_count = 0
-    uncertain_count = 0
+    if hasattr(db, "get_stats"):
+        total_checks, real_count, fake_count, uncertain_count = db.get_stats(session["user"])
 
-    if hasattr(
-        db,
-        "get_stats"
-    ):
-
-        total_checks, real_count, fake_count, uncertain_count = \
-            db.get_stats(
-                session["user"]
-            )
-
-    # ======================================
-    # RENDER PAGE
-    # ======================================
-
+    # =========================
+    # RENDER
+    # =========================
     return render_template(
         "home.html",
-
         result=result,
-
         confidence=confidence,
-
         similarity=similarity,
-
         credibility=credibility,
-
         web_score=web_score,
-
         sources=sources,
-
         user_input=user_input,
-
         extracted_text=extracted_text,
-
         total_checks=total_checks,
-
         real_count=real_count,
-
         fake_count=fake_count,
-
         uncertain_count=uncertain_count
     )
 
-# ==========================================
-# HISTORY
-# ==========================================
 
+# =========================
+# HISTORY
+# =========================
 @app.route("/history")
 def history():
-
     if "user" not in session:
         return redirect("/login")
 
-    data = db.get_history(
-        session["user"]
-    )
+    data = db.get_history(session["user"])
+    return render_template("history.html", data=data)
 
-    return render_template(
-        "history.html",
-        data=data
-    )
 
-# ==========================================
+# =========================
 # LOGOUT
-# ==========================================
-
+# =========================
 @app.route("/logout")
 def logout():
-
     session.clear()
-
     return redirect("/login")
 
-# ==========================================
+
+# =========================
 # RUN
-# ==========================================
-
+# =========================
 if __name__ == "__main__":
-
-    app.run(
-        debug=True
-    )
+    app.run(debug=True)
