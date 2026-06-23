@@ -44,7 +44,10 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # STOPWORDS
 # ==========================================
 
-nltk.download("stopwords")
+
+
+nltk.download("stopwords", quiet=True)
+
 from nltk.corpus import stopwords
 
 STOP_WORDS = set(stopwords.words("english"))
