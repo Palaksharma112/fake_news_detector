@@ -94,4 +94,3 @@ joblib.dump(vectorizer, "vectorizer.pkl")
 
 print("Model Saved Successfully")
 
-print(df["label"].value_counts())

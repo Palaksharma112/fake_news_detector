@@ -25,8 +25,15 @@ db.init_db()
 # MODEL
 # ==========================================
 
-model = joblib.load("model.pkl")
-vectorizer = joblib.load("vectorizer.pkl")
+model = None
+vectorizer = None
+
+def load_models():
+    global model, vectorizer
+    if model is None or vectorizer is None:
+        model = joblib.load("model.pkl")
+        vectorizer = joblib.load("vectorizer.pkl")
+    return model, vectorizer
 
 # ==========================================
 # UPLOAD FOLDER
@@ -274,8 +281,8 @@ def home():
 
         cleaned = clean(user_input)
 
+        model, vectorizer = load_models()
         vec = vectorizer.transform([cleaned])
-
         prediction = model.predict(vec)[0]
 
         if hasattr(model, "predict_proba"):
@@ -449,4 +456,6 @@ def logout():
 # ==========================================
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
