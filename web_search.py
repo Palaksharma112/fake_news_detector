@@ -3,38 +3,43 @@ from bs4 import BeautifulSoup
 import urllib.parse
 import re
 
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 Chrome/124.0 Safari/537.36"
+    )
+}
+
+STOP_WORDS = {
+    "the", "a", "an", "is", "was", "were", "has", "have",
+    "had", "into", "of", "for", "to", "and", "or",
+    "in", "on", "with", "from", "this", "that"
+}
+
+
 def extract_keywords(text):
-
-    words = re.findall(r"[A-Za-z]+", text)
-
-    stop_words = {
-        "the","a","an","is","was","were",
-        "has","have","had","into","of",
-        "for","to","and","or","in","on"
-    }
+    words = re.findall(r"[A-Za-z0-9]+", text)
 
     keywords = [
         w for w in words
-        if len(w) > 3 and w.lower() not in stop_words
+        if len(w) > 2 and w.lower() not in STOP_WORDS
     ]
 
-    return " ".join(keywords[:8])
+    return " ".join(keywords[:10])
 
 
 def search_once(query):
 
-    url = f"https://duckduckgo.com/html/?q={urllib.parse.quote(query)}"
-
-    headers = {
-        "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-    }
+    url = (
+        "https://duckduckgo.com/html/?q=" +
+        urllib.parse.quote(query)
+    )
 
     try:
 
         response = requests.get(
             url,
-            headers=headers,
+            headers=HEADERS,
             timeout=10
         )
 
@@ -45,20 +50,20 @@ def search_once(query):
 
         results = []
 
-        for result in soup.select(".result"):
+        for item in soup.select(".result"):
 
-            title_tag = result.select_one(".result__a")
-            snippet_tag = result.select_one(".result__snippet")
+            title = item.select_one(".result__a")
+            snippet = item.select_one(".result__snippet")
 
-            if not title_tag:
+            if title is None:
                 continue
 
             results.append({
-                "title": title_tag.get_text(" ", strip=True),
-                "link": title_tag.get("href"),
+                "title": title.get_text(" ", strip=True),
+                "link": title.get("href"),
                 "snippet": (
-                    snippet_tag.get_text(" ", strip=True)
-                    if snippet_tag else ""
+                    snippet.get_text(" ", strip=True)
+                    if snippet else ""
                 )
             })
 
@@ -70,28 +75,42 @@ def search_once(query):
         return []
 
 
-def search_web(claim):
+def search_web(query):
+    """
+    Works for:
+    1. News text
+    2. OCR text
+    3. AI-generated image captions
+    """
+
+    if not query.strip():
+        return []
 
     searches = [
-        claim,
-        extract_keywords(claim),
-        claim + " news",
-        claim + " Reuters",
-        claim + " BBC"
+        query,
+        extract_keywords(query),
+        query + " news",
+        query + " Reuters",
+        query + " BBC",
+        query + " AP News"
     ]
 
-    final_results = []
+    results = []
     seen = set()
 
     for q in searches:
+
+        if not q.strip():
+            continue
 
         for item in search_once(q):
 
             link = item["link"]
 
-            if link not in seen:
+            if link in seen:
+                continue
 
-                seen.add(link)
-                final_results.append(item)
+            seen.add(link)
+            results.append(item)
 
-    return final_results[:20]
+    return results[:25]

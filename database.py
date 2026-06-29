@@ -34,18 +34,33 @@ def get_user(username, password):
 def add_history(username, news, result):
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
-    c.execute("INSERT INTO history (username, news, result) VALUES (?,?,?)",
-              (username, news, result))
+
+    c.execute(
+        "INSERT INTO history (username, news, result) VALUES (?, ?, ?)",
+        (username, news, result)
+    )
+
     conn.commit()
     conn.close()
 
+    
 
 def get_history(username):
+
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
-    c.execute("SELECT news, result FROM history WHERE username=?",
-              (username,))
-    return c.fetchall()
+
+    c.execute("""
+        SELECT news,
+               result
+        FROM history
+        WHERE username=?
+        ORDER BY id DESC
+    """, (username,))
+
+    data = c.fetchall()
+    conn.close()
+    return data
 
 
 

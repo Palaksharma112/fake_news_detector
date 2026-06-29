@@ -445,3 +445,39 @@ small{
     }
 
 }
+
+.uploaded-image{
+    width:100%;
+    max-width:500px;
+    display:block;
+    margin:20px auto;
+    border-radius:15px;
+    border:3px solid #334155;
+    box-shadow:0 10px 25px rgba(0,0,0,.35);
+}
+
+.upload-box{
+    margin-top:20px;
+    border:2px dashed #38bdf8;
+    border-radius:15px;
+    padding:25px;
+    text-align:center;
+    background:#0b1220;
+}
+
+.upload-label{
+    display:block;
+    font-size:20px;
+    font-weight:bold;
+    color:#38bdf8;
+    margin-bottom:15px;
+}
+
+.upload-box input{
+    color:white;
+    margin-bottom:10px;
+}
+
+.upload-box small{
+    color:#94a3b8;
+}
